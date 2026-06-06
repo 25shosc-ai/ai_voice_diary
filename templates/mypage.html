@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>WisLog - 日記帳</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css')}}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/mypage.css') }}">
+    </head>
+
+    <body>
+        <div class="phone-frame">
+            <!-- Status bar -->
+            <div class="status-bar">
+                <span class="status-bar-time" id="clockTime">9:41</span>
+                <div class="status-bar-icons">
+                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                        <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/>
+                    </svg>
+                    <svg viewBox="0 0 24 24" fill="white" width="26" height="14">
+                        <rect x="1" y="5" width="18" height="14" rx="3" stroke="white" stroke-width="1.5" fill="none"/>
+                        <rect x="3" y="7" width="13" height="10" rx="1.5" fill="white"/>
+                        <path d="M21 9.5v5c1.1-.49 1.1-5.51 0-5z" fill="white"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="phone-inner">
+                <!-- Top bar -->
+                <div class="my-top-bar">
+                    <div class="top-spacer"></div>
+                    <span class="my-top-title">日記帳</span>
+                    <div class="top-spacer"></div>
+                </div>
+
+
+<!-- ═══ TAB: 日記 ═══ -->
+                <div id="tabDiary" class="tab-content">
+                    <div class="button-area">
+                        <button class="filter-btn active" id="btnRecent3" onclick="loadRecent3(this)">直近3日</button>
+                        <button class="filter-btn"        id="btnAll"     onclick="loadAll(this)">すべて</button>
+                        <button class="filter-btn"        id="btnRandom"  onclick="loadRandom(this)">🎲 ランダム</button>
+                    </div>
+                    <div id="emptyMessage" class="empty-state">
+                        <span>📖</span>
+                        <p>まだ日記がありません</p>
+                    </div>
+                    <ul id="list" class="diary-list"></ul>
+                </div>
+
+                <!-- ═══ TAB: 感情 ═══ -->
+                <div id="tabAnalysis" class="tab-content active">
+                    <div class="analysis-scroll">
+                        <!-- 週次レポート -->
+                        <div class="analysis-card" id="weeklySection" style="display:none">
+                            <div class="section-label">先週のあなた</div>
+                            <p class="weekly-text" id="weeklyText"></p>
+                        </div>
+                        <div class="analysis-card analysis-loading" id="weeklyLoading">
+                            <div class="loading-dot-wrap"><span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span></div>
+                            <p>振り返り中...</p>
+                        </div>
+
+                        <!-- エネルギーグラフ -->
+                        <div class="analysis-card" id="energySection" style="display:none">
+                            <div class="section-label">感情エネルギー推移 <span class="section-sub">過去7日間</span></div>
+                            <div id="energyChart"></div>
+                        </div>
+                        <div class="analysis-card analysis-loading" id="energyLoading">
+                            <div class="loading-dot-wrap"><span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span></div>
+                            <p>分析中...</p>
+                        </div>
+
+                        <!-- 感情ヒートマップ -->
+                        <div class="analysis-card" id="heatmapSection" style="display:none">
+                            <div class="section-label">感情マップ <span class="section-sub">曜日×時間帯</span></div>
+                            <div id="heatmapGrid"></div>
+                            <div class="heatmap-legend">
+                                <span class="legend-low">low</span>
+                                <div class="legend-bar"></div>
+                                <span class="legend-high">high</span>
+                            </div>
+                        </div>
+                        <div class="analysis-card analysis-loading" id="heatmapLoading">
+                            <div class="loading-dot-wrap"><span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span></div>
+                            <p>マップ生成中...</p>
+                        </div>
+
+                        <!-- 人生テーマ -->
+                        <div class="analysis-card" id="themesSection" style="display:none">
+                            <div class="section-label">今月のテーマ</div>
+                            <div class="themes-list" id="themesList"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══ TAB: 辞典 ═══ -->
+                <div id="tabDict" class="tab-content">
+                    <div class="analysis-scroll">
+                        <!-- あなたの輪郭（自己モデル） -->
+                        <div class="analysis-card" id="selfModelSection" style="display:none">
+                            <div class="dict-header">🪞 あなたの輪郭</div>
+                            <div id="selfModelContent"></div>
+                        </div>
+
+                        <div class="analysis-card" id="dictSection" style="display:none">
+                            <div class="dict-header">あなた辞典</div>
+                            <div class="dict-content" id="dictContent"></div>
+                        </div>
+                        <div class="analysis-card analysis-loading" id="dictLoading">
+                            <div class="loading-dot-wrap"><span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span></div>
+                            <p>辞典を生成中...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Navigation -->
+                <nav class="bottom-nav">
+                    <a href="/" class="nav-item">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                        <span>通話</span>
+                    </a>
+                    <a href="/mypage#diary" class="nav-item" id="navDiary">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 14H8v-2h8v2zm0-4H8v-2h8v2zm-3-4H8V6h5v2z"/></svg>
+                        <span>日記</span>
+                    </a>
+                    <a href="/mypage#analysis" class="nav-item" id="navAnalysis">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/></svg>
+                        <span>分析</span>
+                    </a>
+                    <a href="/mypage#dict" class="nav-item" id="navDict">
+                        <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                        <span>自分</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <script>
+        // ─── Clock ───
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('clockTime').textContent =
+                now.getHours().toString().padStart(2,'0') + ':' +
+                now.getMinutes().toString().padStart(2,'0');
+        }
+        updateClock();
+        setInterval(updateClock, 10000);
+
+        // ─── Tab switching ───
+        const loaded = { analysis: false, dict: false, diary: false };
+
+        function switchTab(name) {
+            document.querySelectorAll('.tab-btn').forEach(b =>
+                b.classList.toggle('active', b.dataset.tab === name));
+            document.querySelectorAll('.tab-content').forEach(c =>
+                c.classList.toggle('active', c.id === 'tab' + name.charAt(0).toUpperCase() + name.slice(1)));
+            if (name === 'analysis' && !loaded.analysis) { loadAnalysis(); loaded.analysis = true; }
+            if (name === 'dict'     && !loaded.dict)     { loadDict();     loaded.dict     = true; }
+            if (name === 'diary'    && !loaded.diary)    { loadRecent3(document.getElementById('btnRecent3')); loaded.diary = true; }
+        }
+
+        // ─── Diary tab ───
+        function formatDate(dateStr) {
+            const d = new Date(dateStr + 'T00:00:00');
+            const w = ['日','月','火','水','木','金','土'][d.getDay()];
+            return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${w}）`;
+        }
+
+        function setActive(btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function renderDays(days) {
+            const list  = document.getElementById('list');
+            const empty = document.getElementById('emptyMessage');
+            list.innerHTML = '';
+            if (!days || !days.length) { empty.style.display = 'flex'; return; }
+            empty.style.display = 'none';
+            days.forEach((day, i) => {
+                const li = document.createElement('li');
+                li.className = 'diary-card';
+                li.style.animationDelay = `${i * 0.06}s`;
+                const titleHtml   = day.title   ? `<div class="card-title">「${day.title}」</div>` : '';
+                const emotionHtml = day.emotion ? `<div class="card-emotion">🌙 ${day.emotion}</div>` : '';
+                li.innerHTML = `
+                    <div class="card-date">${formatDate(day.date)} · ${day.count}回</div>
+                    ${titleHtml}${emotionHtml}
+                    <div class="card-body">${day.body || day.summary || '（日記なし）'}</div>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        async function loadRecent3(btn) {
+            setActive(btn);
+            const data = await fetch('/api/diary/daily').then(r => r.json());
+            renderDays(data.slice(0, 3));
+        }
+        async function loadAll(btn) {
+            setActive(btn);
+            const data = await fetch('/api/diary/daily').then(r => r.json());
+            renderDays(data);
+        }
+        async function loadRandom(btn) {
+            setActive(btn);
+            const data = await fetch('/api/diary/random_day').then(r => r.json());
+            renderDays(data ? [data] : []);
+        }
+
+        // ハッシュに応じてタブ切り替え＆ナビアクティブ
+        const TAB_TITLES = { diary: '日記', analysis: '分析', dict: '自分' };
+        function applyHash() {
+            const hash = location.hash.replace('#', '') || 'analysis';
+            const tabMap = { diary: 'diary', analysis: 'analysis', dict: 'dict' };
+            const tab = tabMap[hash] || 'analysis';
+            switchTab(tab);
+            document.querySelectorAll('.bottom-nav .nav-item').forEach(a => a.classList.remove('active'));
+            const navEl = document.getElementById('nav' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            if (navEl) navEl.classList.add('active');
+            document.querySelector('.my-top-title').textContent = TAB_TITLES[tab] || '日記';
+        }
+        applyHash();
+        window.addEventListener('hashchange', applyHash);
+
+        // ─── Analysis tab ───
+        function renderEnergyChart(data) {
+            const valid = data.filter(d => d.energy != null);
+            if (valid.length < 2) return;
+
+            const container = document.getElementById('energyChart');
+            const W = Math.max(200, (container.clientWidth || 260) - 4);
+            const H = 120;
+            const pad = { t: 12, b: 26, l: 52, r: 10 };
+            const cW = W - pad.l - pad.r, cH = H - pad.t - pad.b;
+            const n  = data.length;
+
+            const pts = data.map((d, i) => ({
+                x: pad.l + (i / (n - 1)) * cW,
+                y: d.energy != null ? pad.t + (1 - d.energy / 100) * cH : null,
+                date: d.date, energy: d.energy,
+            }));
+
+            const vPts = pts.filter(p => p.y != null);
+            let pathD = '';
+            vPts.forEach((p, i) => {
+                if (i === 0) { pathD = `M${p.x},${p.y}`; return; }
+                const prev = vPts[i - 1];
+                const cx   = (prev.x + p.x) / 2;
+                pathD += ` C${cx},${prev.y} ${cx},${p.y} ${p.x},${p.y}`;
+            });
+            const last  = vPts[vPts.length - 1];
+            const first = vPts[0];
+            const fill  = pathD + ` L${last.x},${pad.t+cH} L${first.x},${pad.t+cH} Z`;
+
+            // Y軸グリッドとラベル（上: happy / 中: 点線のみ / 下: depressed）
+            const yLevels = [
+                { v: 100, label: 'happy' },
+                { v: 50,  label: null },
+                { v: 0,   label: 'sad' },
+            ];
+            const grid = yLevels.map(({ v, label }) => {
+                const y = pad.t + (1 - v / 100) * cH;
+                const textEl = label
+                    ? `<text x="${pad.l - 6}" y="${y + 3.5}" text-anchor="end"
+                             fill="rgba(255,255,255,0.32)" font-size="8.5" font-style="italic">${label}</text>`
+                    : '';
+                return `
+                    <line x1="${pad.l}" y1="${y}" x2="${pad.l + cW}" y2="${y}"
+                          stroke="rgba(255,255,255,0.07)" stroke-width="1" stroke-dasharray="3,3"/>
+                    ${textEl}`;
+            }).join('');
+
+            // X軸日付ラベル
+            const xLabels = data.map((d, i) => {
+                const dt  = new Date(d.date + 'T00:00:00');
+                const txt = `${dt.getMonth()+1}/${dt.getDate()}`;
+                return `<text x="${pts[i].x}" y="${H-4}" text-anchor="middle"
+                              fill="rgba(255,255,255,0.28)" font-size="9">${txt}</text>`;
+            }).join('');
+
+            const dots = vPts.map(p =>
+                `<circle cx="${p.x}" cy="${p.y}" r="3.5" fill="#0abfbc" opacity="0.9"/>`
+            ).join('');
+
+            document.getElementById('energyChart').innerHTML = `
+                <svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block">
+                    <defs>
+                        <linearGradient id="eGrad" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#0abfbc" stop-opacity="0.25"/>
+                            <stop offset="100%" stop-color="#0abfbc" stop-opacity="0"/>
+                        </linearGradient>
+                    </defs>
+                    ${grid}
+                    <path d="${fill}" fill="url(#eGrad)"/>
+                    <path d="${pathD}" fill="none" stroke="#0abfbc" stroke-width="2" stroke-linecap="round"/>
+                    ${dots}${xLabels}
+                </svg>`;
+            document.getElementById('energyLoading').style.display = 'none';
+            document.getElementById('energySection').style.display = 'block';
+        }
+
+        function renderHeatmap({ data, weekdays, slots }) {
+            const values = Object.values(data).filter(v => v != null);
+            if (!values.length) {
+                document.getElementById('heatmapLoading').style.display = 'none';
+                return;
+            }
+            const slotTimes = ['6-12時', '12-18時', '18-22時', '22-6時'];
+            const maxVal = Math.max(...values);
+            const minVal = Math.min(...values);
+
+            // 最高・最低セルを探す
+            let peakKey = null, peakVal = -1, lowKey = null, lowVal = 999;
+            for (const [k, v] of Object.entries(data)) {
+                if (v > peakVal) { peakVal = v; peakKey = k; }
+                if (v < lowVal)  { lowVal  = v; lowKey  = k; }
+            }
+
+            let html = '<div class="heatmap-grid">';
+            html += '<div class="hm-corner"></div>';
+            slots.forEach((s, i) => html += `<div class="hm-header"><span>${s}</span><span class="hm-time">${slotTimes[i]}</span></div>`);
+
+            weekdays.forEach((wd, wi) => {
+                html += `<div class="hm-day">${wd}</div>`;
+                slots.forEach((_, si) => {
+                    const key = `${wi},${si}`;
+                    const val = data[key];
+                    if (val != null) {
+                        const norm  = maxVal === minVal ? 0.5 : (val - minVal) / (maxVal - minVal);
+                        const alpha = (0.15 + norm * 0.85).toFixed(2);
+                        const isPeak = key === peakKey;
+                        html += `<div class="hm-cell${isPeak ? ' hm-peak' : ''}"
+                                      style="background:rgba(10,191,188,${alpha})"
+                                      title="${wd}曜 ${slots[si]} (${slotTimes[si]}): エネルギー ${val}">
+                                     <span class="hm-val">${val}</span>
+                                 </div>`;
+                    } else {
+                        html += `<div class="hm-cell hm-empty" title="データなし"></div>`;
+                    }
+                });
+            });
+            html += '</div>';
+
+            // インサイト文
+            let insight = '';
+            if (peakKey) {
+                const [pwi, psi] = peakKey.split(',').map(Number);
+                insight = `✦ ${weekdays[pwi]}曜の${slots[psi]}（${slotTimes[psi]}）に最もエネルギーが高い傾向があります`;
+            }
+
+            document.getElementById('heatmapGrid').innerHTML = html +
+                (insight ? `<p class="hm-insight">${insight}</p>` : '');
+            document.getElementById('heatmapLoading').style.display = 'none';
+            document.getElementById('heatmapSection').style.display = 'block';
+        }
+
+        async function loadAnalysis() {
+            try {
+                const [trend, themes, weekly, heatmap] = await Promise.all([
+                    fetch('/api/emotion_trend').then(r => r.json()),
+                    fetch('/api/life_themes').then(r => r.json()),
+                    fetch('/api/weekly_report').then(r => r.json()),
+                    fetch('/api/heatmap').then(r => r.json()),
+                ]);
+
+                // 週次レポート
+                document.getElementById('weeklyLoading').style.display = 'none';
+                if (weekly && weekly.report) {
+                    document.getElementById('weeklyText').textContent = weekly.report;
+                    document.getElementById('weeklySection').style.display = 'block';
+                }
+                // ヒートマップ
+                if (heatmap && Object.keys(heatmap.data || {}).length) {
+                    renderHeatmap(heatmap);
+                } else {
+                    document.getElementById('heatmapLoading').style.display = 'none';
+                }
+
+                renderEnergyChart(trend);
+                if (themes && themes.length) {
+                    const list = document.getElementById('themesList');
+                    themes.forEach((t, i) => {
+                        const div = document.createElement('div');
+                        div.className = 'theme-item';
+                        div.style.animationDelay = `${i * 0.1}s`;
+                        div.innerHTML = `<span class="theme-num">${String(i+1).padStart(2,'0')}</span><span>${t}</span>`;
+                        list.appendChild(div);
+                    });
+                    document.getElementById('themesSection').style.display = 'block';
+                }
+            } catch(e) {
+                document.getElementById('energyLoading').style.display = 'none';
+            }
+        }
+
+        // ─── Dictionary tab ───
+        const DICT_LABELS = {
+            likes:    { label: '好き',          icon: '✦' },
+            dislikes: { label: '苦手',          icon: '△' },
+            energy:   { label: '元気になる条件', icon: '◎' },
+            pattern:  { label: '思考のくせ',    icon: '◇' },
+        };
+
+        async function loadDict() {
+            try {
+                const [d, sm] = await Promise.all([
+                    fetch('/api/user_dictionary').then(r => r.json()),
+                    fetch('/api/self_model').then(r => r.json()),
+                ]);
+
+                // あなたの輪郭
+                if (sm && sm.intro) {
+                    const smEl = document.getElementById('selfModelContent');
+                    const rows = [
+                        { label: '話し方', items: sm.voice   || [] },
+                        { label: '大切にしていること', items: sm.values || [] },
+                        { label: '心に抱えていること', items: sm.shadow || [] },
+                    ];
+                    smEl.innerHTML = `
+                        <p class="self-intro">${sm.intro}</p>
+                        ${rows.filter(r => r.items.length).map(r => `
+                            <div class="dict-block">
+                                <div class="dict-block-label"><span class="dict-icon">◈</span>${r.label}</div>
+                                <div class="dict-tags">${r.items.map(t => `<span class="dict-tag">${t}</span>`).join('')}</div>
+                            </div>`).join('')}
+                    `;
+                    document.getElementById('selfModelSection').style.display = 'block';
+                }
+                document.getElementById('dictLoading').style.display = 'none';
+                if (!d || !Object.keys(d).length) return;
+                const content = document.getElementById('dictContent');
+                ['likes','dislikes','energy','pattern'].forEach(key => {
+                    if (!d[key] || !d[key].length) return;
+                    const meta = DICT_LABELS[key];
+                    const block = document.createElement('div');
+                    block.className = 'dict-block';
+                    block.innerHTML = `
+                        <div class="dict-block-label">
+                            <span class="dict-icon">${meta.icon}</span>${meta.label}
+                        </div>
+                        <div class="dict-tags">${d[key].map(t => `<span class="dict-tag">${t}</span>`).join('')}</div>
+                    `;
+                    content.appendChild(block);
+                });
+                document.getElementById('dictLoading').style.display = 'none';
+                document.getElementById('dictSection').style.display  = 'block';
+            } catch(e) {
+                document.getElementById('dictLoading').style.display = 'none';
+            }
+        }
+        </script>
+    </body>
+</html>

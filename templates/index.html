@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <title>WisLog</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/common.css')}}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+    </head>
+
+    <body>
+        <div class="phone-frame">
+            <!-- Status bar -->
+            <div class="status-bar">
+                <span class="status-bar-time" id="clockTime">9:41</span>
+                <div class="status-bar-icons">
+                    <svg viewBox="0 0 24 24" fill="white" width="16" height="16">
+                        <path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/>
+                    </svg>
+                    <svg viewBox="0 0 24 24" fill="white" width="26" height="14">
+                        <rect x="1" y="5" width="18" height="14" rx="3" stroke="white" stroke-width="1.5" fill="none"/>
+                        <rect x="3" y="7" width="13" height="10" rx="1.5" fill="white"/>
+                        <path d="M21 9.5v5c1.1-.49 1.1-5.51 0-5z" fill="white"/>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="phone-inner">
+
+                <!-- ═══════════════════════════════
+                     SCREEN 1: ホーム
+                ════════════════════════════════ -->
+                <div id="screenContacts" class="screen active">
+
+                    <!-- ── 今日のヘッダー ── -->
+                    <div class="today-header">
+                        <div class="today-greeting-row">
+                            <span class="today-greeting" id="todayGreeting"></span>
+                            <span class="streak-badge" id="streakBadge" style="display:none">
+                                🔥 <span id="streakCount">0</span>日連続
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- ── スクロール領域 ── -->
+                    <div class="home-scroll">
+
+                        <!-- 最近のあなた -->
+                        <div class="home-insight" id="homeInsight" style="display:none">
+                            <div class="insight-label">最近のあなた</div>
+                            <p class="insight-intro" id="insightIntro"></p>
+                            <ul class="insight-bullets" id="insightBullets"></ul>
+                            <p class="insight-closing" id="insightClosing"></p>
+                        </div>
+
+                        <!-- 今日の問いかけ -->
+                        <div class="daily-prompt" id="dailyPrompt" style="display:none">
+                            <span class="prompt-label">今日のあなたへ</span>
+                            <p class="prompt-text" id="promptText"></p>
+                        </div>
+
+                        <!-- 1週間前の今日 -->
+                        <div class="week-ago" id="weekAgo" style="display:none">
+                            <span class="week-ago-label">📅 1週間前のあなた</span>
+                            <p class="week-ago-text" id="weekAgoText"></p>
+                        </div>
+
+                        <!-- 今日は誰と話す？ -->
+                        <div class="contacts-section">
+                            <div class="contacts-section-header">
+                                <span class="contacts-section-title">今日は誰と話す？</span>
+                                <div class="avatar-toggle">
+                                    <button id="btnReal" class="type-btn" onclick="switchMode('real')">👤</button>
+                                    <button id="btn2d"   class="type-btn" onclick="switchMode('2d')">🎨</button>
+                                </div>
+                            </div>
+                            <div class="contacts-list" id="contactsList"></div>
+                        </div>
+
+                    </div><!-- /home-scroll -->
+
+                    <nav class="bottom-nav">
+                        <a href="/" class="nav-item active">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                            <span>通話</span>
+                        </a>
+                        <a href="/mypage#diary" class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M18 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 14H8v-2h8v2zm0-4H8v-2h8v2zm-3-4H8V6h5v2z"/></svg>
+                            <span>日記</span>
+                        </a>
+                        <a href="/mypage#analysis" class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/></svg>
+                            <span>分析</span>
+                        </a>
+                        <a href="/mypage#dict" class="nav-item">
+                            <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                            <span>自分</span>
+                        </a>
+                    </nav>
+                </div>
+
+                <!-- ═══════════════════════════════
+                     SCREEN 2: 呼び出し中
+                ════════════════════════════════ -->
+                <div id="screenCalling" class="screen">
+                    <div class="calling-bg" id="callingBg"></div>
+                    <div class="calling-content">
+                        <div class="calling-rings">
+                            <div class="calling-ring calling-ring-1"></div>
+                            <div class="calling-ring calling-ring-2"></div>
+                            <div id="callingRingsEmoji" class="calling-emoji-avatar" style="display:none"></div>
+                            <img id="callingAvatar" class="calling-avatar" alt="">
+                        </div>
+                        <h2 id="callingName" class="calling-name"></h2>
+                        <p id="callingTag"   class="calling-tag"></p>
+                        <p class="calling-status-text">呼び出し中<span class="call-dots"></span></p>
+                    </div>
+                    <div class="calling-actions">
+                        <button class="hangup-btn" onclick="hangup()">
+                            <svg viewBox="0 0 24 24" fill="white" width="28" height="28">
+                                <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" transform="rotate(135,12,12)"/>
+                            </svg>
+                        </button>
+                        <span class="hangup-label">キャンセル</span>
+                    </div>
+                </div>
+
+                <!-- ═══════════════════════════════
+                     SCREEN: 気分チェック
+                ════════════════════════════════ -->
+                <div id="screenMood" class="screen">
+                    <div class="mood-screen">
+                        <p class="mood-connected">繋がりました</p>
+                        <p class="mood-question">今の気分は？</p>
+                        <div class="mood-emojis">
+                            <button class="mood-btn" onclick="selectMood(1)"><span>😔</span><span class="mood-num">1</span></button>
+                            <button class="mood-btn" onclick="selectMood(2)"><span>🙁</span><span class="mood-num">2</span></button>
+                            <button class="mood-btn" onclick="selectMood(3)"><span>😐</span><span class="mood-num">3</span></button>
+                            <button class="mood-btn" onclick="selectMood(4)"><span>🙂</span><span class="mood-num">4</span></button>
+                            <button class="mood-btn" onclick="selectMood(5)"><span>😊</span><span class="mood-num">5</span></button>
+                        </div>
+                        <button class="mood-skip" onclick="skipMood()">スキップ</button>
+                    </div>
+                </div>
+
+                <!-- ═══════════════════════════════
+                     SCREEN 3: 通話中
+                ════════════════════════════════ -->
+                <div id="screenCall" class="screen">
+                    <div class="call-topbar">
+                        <img id="inCallAvatar" class="in-call-avatar" alt="">
+                        <div class="in-call-info">
+                            <span id="inCallName" class="in-call-name"></span>
+                            <p id="status" class="call-status">通話待機中</p>
+                        </div>
+                        <div class="call-top-actions">
+                            <button id="ttsToggle" class="tts-toggle-btn" onclick="toggleTTS()">🔇</button>
+                            <button class="end-call-btn" onclick="endCall()">
+                                <svg viewBox="0 0 24 24" fill="white" width="18" height="18">
+                                    <path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" transform="rotate(135,12,12)"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="chat-area" id="chatArea">
+                        <div class="chat-hint" id="chatHint">🎤 下のボタンを押して話しかけてね</div>
+                        <div class="typing-indicator" id="typingIndicator">
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                            <span class="dot"></span>
+                        </div>
+                    </div>
+
+                    <div class="mic-area">
+                        <button id="micButton" class="mic-button" onclick="startRecording()">
+                            <svg viewBox="0 0 24 24" fill="white" width="30" height="30">
+                                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                            </svg>
+                        </button>
+                        <span class="mic-label" id="micLabel">タップして話す</span>
+                    </div>
+                </div>
+
+            </div><!-- /phone-inner -->
+        </div><!-- /phone-frame -->
+
+        <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+        <script>
+            // 時間帯グリーティング
+            (function() {
+                const h = new Date().getHours();
+                const greetings = [
+                    [5,  12, "おはよう。今日も、ここから。"],
+                    [12, 18, "午後の空気の中で。"],
+                    [18, 22, "夕方、どんな日だった？"],
+                    [22, 24, "夜が深まってきたね。"],
+                    [0,   5, "こんな時間まで起きてたんだ。"],
+                ];
+                const [,,text] = greetings.find(([s, e]) => h >= s && h < e) || [0,0,"こんにちは。"];
+                document.getElementById('todayGreeting').textContent = text;
+            })();
+
+            // ストリーク
+            fetch('/api/streak')
+                .then(r => r.json())
+                .then(d => {
+                    if (d.streak >= 1) {
+                        document.getElementById('streakCount').textContent = d.streak;
+                        document.getElementById('streakBadge').style.display = 'inline-flex';
+                    }
+                }).catch(() => {});
+
+            // 1週間前の今日
+            fetch('/api/week_ago')
+                .then(r => r.json())
+                .then(d => {
+                    if (d && d.text) {
+                        const t = d.text;
+                        document.getElementById('weekAgoText').textContent =
+                            t.length > 70 ? t.slice(0, 70) + '…' : t;
+                        document.getElementById('weekAgo').style.display = 'block';
+                    }
+                }).catch(() => {});
+
+            // 今日の問いかけ
+            fetch('/api/daily_prompt')
+                .then(r => r.json())
+                .then(d => {
+                    if (d.question) {
+                        document.getElementById('promptText').textContent = d.question;
+                        document.getElementById('dailyPrompt').style.display = 'block';
+                    }
+                }).catch(() => {});
+
+            // 最近のあなた（非同期・遅くても気にしない）
+            fetch('/api/recent_you')
+                .then(r => r.json())
+                .then(d => {
+                    if (!d || (!d.intro && !d.highlights)) return;
+                    if (d.intro)   document.getElementById('insightIntro').textContent   = d.intro;
+                    if (d.closing) document.getElementById('insightClosing').textContent = d.closing;
+                    if (d.highlights && d.highlights.length) {
+                        const ul = document.getElementById('insightBullets');
+                        d.highlights.forEach(h => {
+                            const li = document.createElement('li');
+                            li.textContent = h;
+                            ul.appendChild(li);
+                        });
+                    }
+                    document.getElementById('homeInsight').style.display = 'block';
+                }).catch(() => {});
+        </script>
+        <script>
+            function updateClock() {
+                const now = new Date();
+                const h = now.getHours().toString().padStart(2,'0');
+                const m = now.getMinutes().toString().padStart(2,'0');
+                document.getElementById('clockTime').textContent = h + ':' + m;
+            }
+            updateClock();
+            setInterval(updateClock, 10000);
+        </script>
+    </body>
+</html>

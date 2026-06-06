@@ -1,0 +1,144 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* ===== Full page background ===== */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+                 "Yu Gothic", "Meiryo", sans-serif;
+    background: #1a1a2e;
+    background-image:
+        radial-gradient(ellipse at 30% 20%, rgba(102, 126, 234, 0.2) 0%, transparent 55%),
+        radial-gradient(ellipse at 75% 80%, rgba(155, 89, 182, 0.15) 0%, transparent 55%);
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ===== Phone frame ===== */
+.phone-frame {
+    --ph: min(844px, calc(100vh - 32px));
+    position: relative;
+    width: calc(var(--ph) * 390 / 844);
+    height: var(--ph);
+    background: #0d1117;
+    border-radius: calc(var(--ph) * 48 / 844);
+    overflow: hidden;
+    box-shadow:
+        0 0 0 10px #1c1c1e,
+        0 0 0 12px #2c2c2e,
+        0 40px 80px rgba(0, 0, 0, 0.6);
+    display: flex;
+    flex-direction: column;
+}
+
+/* Dynamic Island / notch */
+.phone-frame::before {
+    content: "";
+    position: absolute;
+    top: calc(var(--ph) * 12 / 844);
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(var(--ph) * 120 / 844);
+    height: calc(var(--ph) * 34 / 844);
+    background: #000;
+    border-radius: calc(var(--ph) * 20 / 844);
+    z-index: 100;
+}
+
+/* Side buttons (decorative) */
+.phone-frame::after {
+    content: "";
+    position: absolute;
+    top: 160px;
+    right: -14px;
+    width: 4px;
+    height: 70px;
+    background: #2c2c2e;
+    border-radius: 2px;
+    box-shadow: 0 90px 0 #2c2c2e;
+}
+
+/* ===== Inner scroll area ===== */
+.phone-inner {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    margin-top: calc(var(--ph) * 54 / 844); /* space for dynamic island */
+    scrollbar-width: none;
+}
+
+.phone-inner::-webkit-scrollbar {
+    display: none;
+}
+
+/* ===== Status bar time (decorative) ===== */
+.status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 28px;
+    height: 44px;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    flex-shrink: 0;
+}
+
+.status-bar-time {
+    font-size: 15px;
+    font-weight: 700;
+}
+
+.status-bar-icons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+}
+
+/* ===== Responsive: real phone shows full screen ===== */
+@media (max-width: 480px) {
+    body {
+        align-items: flex-start;
+        background: #0d1117;
+    }
+
+    .phone-frame {
+        width: 100vw;
+        height: 100vh;
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .phone-frame::before,
+    .phone-frame::after {
+        display: none;
+    }
+
+    .phone-inner {
+        margin-top: 0;
+    }
+
+    .status-bar {
+        display: none;
+    }
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+button {
+    font-family: inherit;
+    cursor: pointer;
+    outline: none;
+    border: none;
+}
