@@ -2,10 +2,4 @@ Flask
 python-dotenv
 psycopg2-binary
 gunicorn
-
-flask
-render_template
-request 
-jsonify
-send_file
-google.genai
+google-genai
