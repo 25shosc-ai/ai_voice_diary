@@ -1,5 +1,4 @@
 Flask
-python-dotenv
-psycopg2-binary
-gunicorn
 google-genai
+python-dotenv
+gunicorn
